@@ -6,10 +6,16 @@ import time
 import os
 from urllib.parse import urljoin
 
+# ========== PATH CONFIG ==========
+PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
+CSV_DIR     = os.path.join(PROJECT_DIR, 'csv')
+OUT_FILE    = os.path.join(CSV_DIR, 'Animal_Data.csv')
+os.makedirs(CSV_DIR, exist_ok=True)
+# ==================================
+
 # ========== CONFIG ==========
-BASE_URL = "https://a-z-animals.com"
-ANIMAL_URL = "https://a-z-animals.com/animals/"
-OUT_FILE = 'csv/Animal_Data.csv'
+BASE_URL    = "https://a-z-animals.com"
+ANIMAL_URL  = "https://a-z-animals.com/animals/"
 SAMPLE_SIZE = 500
 random.seed(41)
 # ============================
@@ -30,12 +36,12 @@ EXCLUDE_KEYWORDS = [
 
 # ========== Gather Animal Links ==========
 print("Fetching animal links from A-Z Animals website...")
-res = session.get(ANIMAL_URL)
+res  = session.get(ANIMAL_URL)
 soup = BeautifulSoup(res.text, 'html.parser')
 
-all_links = [a['href'] for a in soup.find_all('a', href=True)]
-
+all_links   = [a['href'] for a in soup.find_all('a', href=True)]
 animal_pool = []
+
 for href in all_links:
     if '/animals/' not in href:
         continue
@@ -51,7 +57,7 @@ print(f"Total animals found: {len(animal_pool)}")
 
 # ========== Random Sampling ==========
 sampled = random.sample(animal_pool, min(SAMPLE_SIZE, len(animal_pool)))
-print(f" Randomly selected {len(sampled)} animals to scrape...\n")
+print(f"Randomly selected {len(sampled)} animals to scrape...\n")
 
 # ========== Scrape Data ==========
 def get_text_by_keywords(soup, keywords):
@@ -70,8 +76,8 @@ full_animal_data = [["Animal Name", "Animal URL", "Description", "Habitat", "Die
 
 for index, href in enumerate(sampled):
     clean = href.replace('https://a-z-animals.com', '').strip('/')
-    name = clean.split('/')[-1].replace('-', ' ').title()
-    url = urljoin(BASE_URL, href)
+    name  = clean.split('/')[-1].replace('-', ' ').title()
+    url   = urljoin(BASE_URL, href)
 
     print(f"[{index + 1}/{len(sampled)}] Scraping: {name}")
 
@@ -88,7 +94,7 @@ for index, href in enumerate(sampled):
         classif     = get_text_by_keywords(soup, ['classification', 'taxonomy', 'scientific'])
 
         if not description:
-            paras = soup.find_all('p')
+            paras       = soup.find_all('p')
             description = ' '.join(p.get_text(strip=True) for p in paras[:3] if p.get_text(strip=True))
 
         full_animal_data.append([
@@ -104,10 +110,8 @@ for index, href in enumerate(sampled):
     except Exception as e:
         print(f"Error: {e}")
         full_animal_data.append([name, url, "Error", "Error", "Error", "Error", "Error", "Error"])
-    #time.sleep(0.1)
 
 # ========== Save to CSV ==========
-os.makedirs('csv', exist_ok=True)
 with open(OUT_FILE, 'w', newline='', encoding='utf-8-sig') as f:
     writer = csv.writer(f)
     writer.writerows(full_animal_data)

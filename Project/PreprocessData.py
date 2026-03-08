@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 import nltk
 from nltk.corpus import stopwords
@@ -5,13 +6,21 @@ from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
 import re
 
-nltk.download('punkt')
-nltk.download('punkt_tab')
-nltk.download('stopwords')
-nltk.download('wordnet')
+# ========== PATH CONFIG ==========
+PROJECT_DIR    = os.path.dirname(os.path.abspath(__file__))
+NLTK_DATA_PATH = os.path.normpath(os.path.join(PROJECT_DIR, '..', 'nltk_data'))
+CSV_DIR        = os.path.join(PROJECT_DIR, 'csv')
+IN_FILE        = os.path.join(CSV_DIR, 'Animal_Data.csv')
+OUT_FILE       = os.path.join(CSV_DIR, 'Animal_Data_Cleaned.csv')
+os.makedirs(NLTK_DATA_PATH, exist_ok=True)
+os.makedirs(CSV_DIR, exist_ok=True)
+# ==================================
 
-IN_FILE = 'csv/Animal_Data.csv'
-OUT_FILE = 'csv/Animal_Data_Cleaned.csv'
+nltk.data.path.insert(0, NLTK_DATA_PATH)
+nltk.download('punkt',     download_dir=NLTK_DATA_PATH)
+nltk.download('punkt_tab', download_dir=NLTK_DATA_PATH)
+nltk.download('stopwords', download_dir=NLTK_DATA_PATH)
+nltk.download('wordnet',   download_dir=NLTK_DATA_PATH)
 
 try:
     df = pd.read_csv(IN_FILE, encoding='utf-8-sig')
@@ -19,10 +28,10 @@ except FileNotFoundError:
     print(f"{IN_FILE} not found.")
     exit()
 
-lemmatizer = WordNetLemmatizer()
+lemmatizer     = WordNetLemmatizer()
 base_stopwords = set(stopwords.words('english'))
 
-#========= Custom Stopwords for Animal Data ==========
+# ========= Custom Stopwords for Animal Data ==========
 custom_stopwords = {
     'also', 'known', 'called', 'found', 'live', 'lives', 'lived',
     'one', 'two', 'three', 'many', 'most', 'some', 'often', 'usually',
@@ -32,16 +41,16 @@ custom_stopwords = {
     'world', 'area', 'areas', 'place', 'places', 'region', 'regions',
     'type', 'types', 'form', 'forms', 'group', 'groups',
     'year', 'years', 'time', 'times', 'day', 'days',
-    'make', 'made', 'use', 'used', 'using', 'able', 'new' ,'show', 'less', 'more',
+    'make', 'made', 'use', 'used', 'using', 'able', 'new', 'show', 'less', 'more',
     'click', 'location', 'explore', 'map', 'show', 'native', 'origin'
 }
 
 all_stopwords = base_stopwords.union(custom_stopwords)
 
 def clean_text(text):
-    text = str(text).lower()
-    text = re.sub(r'[^a-z\s]', ' ', text)
-    tokens = word_tokenize(text)
+    text    = str(text).lower()
+    text    = re.sub(r'[^a-z\s]', ' ', text)
+    tokens  = word_tokenize(text)
     cleaned = []
     for token in tokens:
         if token not in all_stopwords and len(token) > 2:
@@ -50,9 +59,9 @@ def clean_text(text):
     return ' '.join(cleaned)
 
 def clean_name(text):
-    text = str(text).lower()
-    text = re.sub(r'[^a-z\s]', ' ', text)
-    tokens = word_tokenize(text)
+    text    = str(text).lower()
+    text    = re.sub(r'[^a-z\s]', ' ', text)
+    tokens  = word_tokenize(text)
     cleaned = []
     for token in tokens:
         if token not in base_stopwords and len(token) > 1:

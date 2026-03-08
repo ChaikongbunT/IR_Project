@@ -1,11 +1,21 @@
+import os
 import pandas as pd
 import numpy as np
 import re
+import nltk
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.cluster import KMeans
 from nltk.stem import WordNetLemmatizer
 from nltk.corpus import stopwords
+
+# ========== PATH CONFIG ==========
+PROJECT_DIR    = os.path.dirname(os.path.abspath(__file__))
+NLTK_DATA_PATH = os.path.normpath(os.path.join(PROJECT_DIR, '..', 'nltk_data'))
+CSV_DIR        = os.path.join(PROJECT_DIR, 'csv')
+IN_FILE        = os.path.join(CSV_DIR, 'Animal_Data_Cleaned.csv')
+nltk.data.path.insert(0, NLTK_DATA_PATH)
+# ==================================
 
 lemmatizer = WordNetLemmatizer()
 stop_words = set(stopwords.words('english'))
@@ -26,19 +36,18 @@ def average_precision(retrieved, relevant):
     score, hits = 0.0, 0.0
     for i, p in enumerate(retrieved):
         if p in relevant:
-            hits += 1.0
+            hits  += 1.0
             score += hits / (i + 1.0)
     return score / len(relevant)
 
 # ==================== Load Data ====================
-filename = 'csv/Animal_Data_Cleaned.csv'
 try:
-    df = pd.read_csv(filename, encoding='utf-8-sig')
+    df = pd.read_csv(IN_FILE, encoding='utf-8-sig')
     for col in ['Cleaned Description', 'Cleaned Habitat', 'Cleaned Diet',
                 'Cleaned Behavior', 'Cleaned Physical', 'Cleaned Classification']:
         df[col] = df[col].fillna('')
 except FileNotFoundError:
-    print(f"{filename} not found.")
+    print(f"{IN_FILE} not found.")
     exit()
 
 # ==================== Build TF-IDF ====================
@@ -52,7 +61,7 @@ df['Search_Text'] = (
     df['Cleaned Classification'].astype(str)
 )
 
-vectorizer = TfidfVectorizer()
+vectorizer   = TfidfVectorizer()
 tfidf_matrix = vectorizer.fit_transform(df['Search_Text'])
 
 # ==================== Build Inverted Index ====================
@@ -61,7 +70,7 @@ inverted_index = {}
 for col_idx, term in enumerate(feature_names):
     doc_indices = tfidf_matrix[:, col_idx].nonzero()[0]
     inverted_index[term] = {
-        'DF': len(doc_indices),
+        'DF':       len(doc_indices),
         'Postings': [df.iloc[i]['Animal Name'] for i in doc_indices]
     }
 
@@ -78,8 +87,6 @@ synonyms_dict = {
     'mountain':  ['highland', 'cliff', 'rocky', 'alpine'],
     'river':     ['freshwater', 'stream', 'lake', 'wetland'],
     'australia': ['marsupial', 'outback', 'eucalyptus'],
-
-    # อาหาร
     'meat':      ['carnivore', 'prey', 'hunt', 'flesh'],
     'plant':     ['herbivore', 'leaf', 'grass', 'vegetation', 'foliage'],
     'fish':      ['aquatic', 'salmon', 'tuna', 'fishing'],
@@ -87,8 +94,6 @@ synonyms_dict = {
     'carnivore': ['predator', 'hunt', 'meat', 'prey'],
     'herbivore': ['plant', 'grass', 'leaf', 'vegetation'],
     'omnivore':  ['plant', 'meat', 'fruit', 'insect'],
-
-    # ลักษณะร่างกาย
     'big':       ['large', 'giant', 'huge', 'massive', 'heavy'],
     'small':     ['tiny', 'little', 'miniature', 'dwarf'],
     'fast':      ['speed', 'quick', 'agile', 'swift', 'sprint'],
@@ -106,14 +111,10 @@ synonyms_dict = {
     'shell':     ['turtle', 'tortoise', 'snail', 'crab'],
     'poison':    ['venom', 'toxic', 'snake', 'frog'],
     'venom':     ['poison', 'toxic', 'bite', 'sting'],
-
-    # พฤติกรรม
     'social':    ['pack', 'herd', 'group', 'colony', 'flock'],
     'solitary':  ['alone', 'lone', 'independent'],
     'hunt':      ['predator', 'prey', 'chase', 'carnivore'],
     'migrate':   ['seasonal', 'travel', 'journey', 'flock'],
-
-    # การจัดหมวดหมู่
     'mammal':    ['warm', 'fur', 'hair', 'milk', 'breast'],
     'reptile':   ['scale', 'cold', 'lizard', 'snake', 'crocodile'],
     'bird':      ['feather', 'wing', 'beak', 'fly', 'egg'],
@@ -129,20 +130,20 @@ def expand_query(query):
     return " ".join(expanded)
 
 # ==================== K-Means Clustering ====================
-N = 10
+N      = 10
 true_k = 5
 
-print("🐾 Grouping animals with K-Means Clustering...")
+print("Grouping animals with K-Means Clustering...")
 kmeans_model = KMeans(n_clusters=true_k, init='k-means++', max_iter=100, n_init=10, random_state=0)
 kmeans_model.fit(tfidf_matrix)
 df['Cluster_ID'] = kmeans_model.labels_
 
 order_centroids = kmeans_model.cluster_centers_.argsort()[:, ::-1]
-terms = vectorizer.get_feature_names_out()
-print(" Top terms per cluster:")
+terms           = vectorizer.get_feature_names_out()
+print("Top terms per cluster:")
 for i in range(true_k):
     top_words = [terms[ind] for ind in order_centroids[i, :7]]
-    print(f"   🐾 Cluster {i+1}: {', '.join(top_words)}")
+    print(f"   Cluster {i+1}: {', '.join(top_words)}")
 print("=" * 60)
 
 # ==================== Search Function ====================
@@ -151,17 +152,17 @@ def search_animals(query, top_n=N):
     if expanded_q != query.lower():
         print(f"\n   [Query Expansion] : '{expanded_q}'")
 
-    query_vec = vectorizer.transform([expanded_q])
-    scores = cosine_similarity(query_vec, tfidf_matrix).flatten()
-    top_indices = scores.argsort()[-top_n:][::-1]
+    query_vec    = vectorizer.transform([expanded_q])
+    scores       = cosine_similarity(query_vec, tfidf_matrix).flatten()
+    top_indices  = scores.argsort()[-top_n:][::-1]
 
     results = []
     for idx in top_indices:
         results.append({
-            'Index': idx,
-            'Name': df.iloc[idx]['Animal Name'],
-            'Score': scores[idx],
-            'URL': df.iloc[idx]['Animal URL'],
+            'Index':   idx,
+            'Name':    df.iloc[idx]['Animal Name'],
+            'Score':   scores[idx],
+            'URL':     df.iloc[idx]['Animal URL'],
             'Cluster': df.iloc[idx]['Cluster_ID'] + 1
         })
     return results
@@ -182,7 +183,7 @@ while True:
         print("Please enter a valid search query.")
         continue
 
-    clean_text = re.sub(r'[^a-z\s]', ' ', user_query.lower())
+    clean_text  = re.sub(r'[^a-z\s]', ' ', user_query.lower())
     clean_words = [lemmatizer.lemmatize(w) for w in clean_text.split() if w not in stop_words]
     clean_query = " ".join(clean_words)
 
@@ -201,8 +202,8 @@ while True:
     print("-" * 60)
     for term in clean_query.split():
         if term in inverted_index:
-            df_count = inverted_index[term]['DF']
-            postings = inverted_index[term]['Postings'][:10]
+            df_count     = inverted_index[term]['DF']
+            postings     = inverted_index[term]['Postings'][:10]
             postings_str = ", ".join(postings)
             if df_count > 10:
                 postings_str += ", ..."
@@ -215,14 +216,14 @@ while True:
     results = search_animals(clean_query, top_n=N)
 
     if results:
-        print(f"\n  พบ {len(results)} สัตว์ที่ตรงกับ '{user_query}'")
+        print(f"\n  Found {len(results)} animals matching '{user_query}'")
         for i, r in enumerate(results):
             print(f"[{i+1}] {r['Name']} ({r['URL']})")
-            print(f"Similarity: {r['Score']:.4f} | Cluster: {r['Cluster']} ")
+            print(f"     Similarity: {r['Score']:.4f} | Cluster: {r['Cluster']}")
 
         # Evaluation
         expanded_eval = expand_query(clean_query)
-        eval_pattern = r'\b(?:' + '|'.join(re.escape(w) for w in expanded_eval.split()) + r')\b'
+        eval_pattern  = r'\b(?:' + '|'.join(re.escape(w) for w in expanded_eval.split()) + r')\b'
 
         relevant_docs = df[
             df['Cleaned Name'].str.contains(eval_pattern, case=False, na=False) |
@@ -249,9 +250,9 @@ while True:
         for i, idx in enumerate(retrieved_indices):
             rank = i + 1
             if idx in relevant_docs:
-                hits += 1
-                p_at_rank = hits / rank
-                sum_p += p_at_rank
+                hits      += 1
+                p_at_rank  = hits / rank
+                sum_p     += p_at_rank
                 print(f"   Rank {rank}: Match! -> P_{rank} = {hits}/{rank} = {p_at_rank:.2f}")
             else:
                 print(f"   Rank {rank}: No match")
@@ -260,7 +261,7 @@ while True:
         if total_relevant > 0:
             print(f"\n   Sum of Precisions = {sum_p:.2f}")
             print(f"   Total Relevant    = {total_relevant} items")
-            print(f"   👉 AP = {sum_p:.2f} / {total_relevant} = {ap_score:.2f}")
+            print(f"   AP = {sum_p:.2f} / {total_relevant} = {ap_score:.2f}")
         else:
             print(f"\n   AP = 0.00")
 
@@ -271,7 +272,7 @@ while True:
         print(f"Precision_{N}: {p_score:.2f} | Recall_{N}: {r_score:.2f} | AP: {ap_score:.2f}")
         print("=" * 60)
 
-        # ตารางประวัติ session
+        # Session history
         print(f"\n{'Query':<20} | {'Precision':<10} | {'Recall':<10} | {'Avg Precision'}")
         print("-" * 60)
         ap_list = []
@@ -279,7 +280,7 @@ while True:
             print(f"{h['query']:<20} | {h['p']:<10.2f} | {h['r']:<10.2f} | {h['ap']:.2f}")
             ap_list.append(h['ap'])
         print("-" * 60)
-        print(f"🏆 MAP (Mean Average Precision) : {np.mean(ap_list):.2f}")
+        print(f"MAP (Mean Average Precision) : {np.mean(ap_list):.2f}")
 
     else:
         print(f"\n  No results found for '{user_query}'")

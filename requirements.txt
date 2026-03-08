@@ -1,0 +1,13 @@
+# Web Scraping (Scraping.py)
+beautifulsoup4>=4.12.0
+requests>=2.31.0
+
+# Data Processing (PreprocessData.py & VSM.py)
+pandas>=2.0.0
+numpy>=1.24.0
+
+# NLP (PreprocessData.py & VSM.py)
+nltk>=3.8.0
+
+# Machine Learning (VSM.py)
+scikit-learn>=1.3.0

@@ -2,7 +2,6 @@ from bs4 import BeautifulSoup
 import requests
 import csv
 import random
-import time
 import os
 from urllib.parse import urljoin
 
@@ -111,7 +110,6 @@ for index, href in enumerate(sampled):
         print(f"Error: {e}")
         full_animal_data.append([name, url, "Error", "Error", "Error", "Error", "Error", "Error"])
 
-    time.sleep(random.uniform(0.1, 1))
 
 # ========== Save to CSV ==========
 with open(OUT_FILE, 'w', newline='', encoding='utf-8-sig') as f:

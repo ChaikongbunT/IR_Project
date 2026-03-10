@@ -1,0 +1,16 @@
+ทดสอบ Habitat
+1.live in ocean deep water
+2.found in arctic cold snow
+ทดสอบ Diet
+3. eat insect small bug
+4. carnivore hunt prey meat
+ทดสอบ Physical Traits
+5. large tusk long trunk
+6. stripe black white pattern
+ทดสอบ Behavior
+7. nocturnal solitary hunt night
+8. social pack group hunt together
+ทดสอบ Classification
+9. amphibian jump water land moist
+ทดสอบ Query Expansion
+10. jump australia pouch

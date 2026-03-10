@@ -465,7 +465,7 @@ def print_evaluation(results: list[dict], relevant_docs: list[int],
         print("  AP = 0.00  (no relevant documents found)")
 
     # --- TP / FP / FN ---
-    print(f"\n  TP : {TP}   FP : {FP}   FN : {FN}")
+    print(f"  TP : {TP}   FP : {FP}   FN : {FN}")
 
     # --- Precision & Recall calculation process ---
     print(f"\n{DIVIDER}")

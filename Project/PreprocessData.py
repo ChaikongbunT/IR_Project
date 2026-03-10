@@ -33,18 +33,41 @@ base_stopwords = set(stopwords.words('english'))
 
 # ========= Custom Stopwords for Animal Data ==========
 custom_stopwords = {
-    'also', 'known', 'called', 'found', 'live', 'lives', 'lived',
-    'one', 'two', 'three', 'many', 'most', 'some', 'often', 'usually',
-    'however', 'although', 'typically', 'generally', 'commonly',
-    'including', 'include', 'such', 'like', 'well', 'due',
-    'animal', 'animals', 'species', 'creature', 'creatures',
-    'world', 'area', 'areas', 'place', 'places', 'region', 'regions',
-    'type', 'types', 'form', 'forms', 'group', 'groups',
-    'year', 'years', 'time', 'times', 'day', 'days',
-    'make', 'made', 'use', 'used', 'using', 'able', 'new', 'show', 'less', 'more',
-    'click', 'location', 'explore', 'map', 'show', 'native', 'origin'
-}
 
+    # --- Web / UI artifacts (scraped noise) ---
+    'click', 'explore', 'map', 'show', 'read', 'learn', 'discover',
+    'visit', 'page', 'article', 'website', 'link', 'photo', 'image',
+    'copyright', 'reserved', 'right', 'source', 'reference', 'fact',
+
+    # --- Filler adverbs & conjunctions ---
+    'also', 'however', 'although', 'though', 'typically', 'generally',
+    'commonly', 'usually', 'often', 'sometimes', 'occasionally',
+    'therefore', 'thus', 'hence', 'furthermore', 'moreover',
+    'additionally', 'nevertheless', 'nonetheless',
+
+    # --- Generic verbs (low discriminative value) ---
+    'make', 'made', 'use', 'used', 'using', 'able',
+    'include', 'including', 'become', 'consider', 'get', 'give',
+    'take', 'keep', 'let', 'put', 'seem', 'tell', 'try', 'mean',
+    'call', 'called', 'known', 'refer',
+
+    # --- Overly generic nouns (appear in nearly every document) ---
+    'animal', 'creature', 'organism', 'thing', 'example',
+    'type', 'form', 'way', 'part', 'number', 'member',
+    'world', 'nature', 'environment',
+
+    # --- Vague quantifiers (not useful for retrieval) ---
+    'many', 'most', 'some', 'several', 'various', 'certain',
+    'few', 'less', 'more', 'much', 'lot', 'enough',
+
+    # --- Time references (rarely discriminative for animals) ---
+    'year', 'month', 'day', 'hour', 'time', 'period',
+    'season', 'century', 'age',
+
+    # --- Filler preposition-like phrases ---
+    'due', 'such', 'well', 'new', 'old', 'based',
+
+}
 all_stopwords = base_stopwords.union(custom_stopwords)
 
 def clean_text(text):

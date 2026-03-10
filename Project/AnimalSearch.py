@@ -23,8 +23,8 @@ from nltk.corpus import stopwords
 PROJECT_DIR         = os.path.dirname(os.path.abspath(__file__))
 NLTK_DATA_PATH      = os.path.normpath(os.path.join(PROJECT_DIR, '..', 'nltk_data'))
 CSV_PATH            = os.path.join(PROJECT_DIR, 'csv', 'Animal_Data_Cleaned.csv')
-TOP_N               = 10       # Number of results to return per query
-RELEVANCE_THRESHOLD = 0.05     # Minimum similarity score to count as relevant
+TOP_N               = 5
+RELEVANCE_THRESHOLD = 0.1
 
 nltk.data.path.insert(0, NLTK_DATA_PATH)
 
@@ -40,51 +40,204 @@ CLEANED_COLS = [
 
 # Synonym map for query expansion — each key expands to related terms at search time
 SYNONYMS = {
-    'jungle':    ['rainforest', 'tropical', 'forest', 'tree'],
-    'forest':    ['woodland', 'jungle', 'rainforest', 'tree'],
-    'ocean':     ['sea', 'marine', 'aquatic', 'water', 'deep'],
-    'sea':       ['ocean', 'marine', 'aquatic', 'coral', 'reef'],
-    'desert':    ['arid', 'dry', 'sand', 'savanna'],
-    'savanna':   ['grassland', 'plain', 'africa', 'dry'],
-    'grassland': ['plain', 'savanna', 'prairie', 'meadow'],
-    'arctic':    ['polar', 'cold', 'ice', 'snow', 'tundra'],
-    'mountain':  ['highland', 'cliff', 'rocky', 'alpine'],
-    'river':     ['freshwater', 'stream', 'lake', 'wetland'],
-    'australia': ['marsupial', 'outback', 'eucalyptus'],
-    'meat':      ['carnivore', 'prey', 'hunt', 'flesh'],
-    'plant':     ['herbivore', 'leaf', 'grass', 'vegetation', 'foliage'],
-    'fish':      ['aquatic', 'salmon', 'tuna', 'fishing'],
-    'insect':    ['bug', 'ant', 'beetle', 'invertebrate'],
-    'carnivore': ['predator', 'hunt', 'meat', 'prey'],
-    'herbivore': ['plant', 'grass', 'leaf', 'vegetation'],
-    'omnivore':  ['plant', 'meat', 'fruit', 'insect'],
-    'big':       ['large', 'giant', 'huge', 'massive', 'heavy'],
-    'small':     ['tiny', 'little', 'miniature', 'dwarf'],
-    'fast':      ['speed', 'quick', 'agile', 'swift', 'sprint'],
-    'slow':      ['sluggish', 'lazy', 'lethargic'],
-    'fly':       ['wing', 'bird', 'aerial', 'flight', 'soar'],
-    'swim':      ['aquatic', 'fin', 'water', 'marine', 'dive'],
-    'jump':      ['leap', 'hop', 'spring', 'bounce', 'kangaroo'],
-    'climb':     ['tree', 'arboreal', 'claw', 'grip'],
-    'nocturnal': ['night', 'dark', 'owl', 'bat'],
-    'stripe':    ['striped', 'zebra', 'tiger', 'pattern'],
-    'spot':      ['spotted', 'leopard', 'cheetah', 'dot'],
-    'mane':      ['lion', 'horse', 'hair', 'neck'],
-    'tusk':      ['elephant', 'ivory', 'walrus'],
-    'horn':      ['rhino', 'antler', 'deer', 'goat'],
-    'shell':     ['turtle', 'tortoise', 'snail', 'crab'],
-    'poison':    ['venom', 'toxic', 'snake', 'frog'],
-    'venom':     ['poison', 'toxic', 'bite', 'sting'],
-    'social':    ['pack', 'herd', 'group', 'colony', 'flock'],
-    'solitary':  ['alone', 'lone', 'independent'],
-    'hunt':      ['predator', 'prey', 'chase', 'carnivore'],
-    'migrate':   ['seasonal', 'travel', 'journey', 'flock'],
-    'mammal':    ['warm', 'fur', 'hair', 'milk', 'breast'],
-    'reptile':   ['scale', 'cold', 'lizard', 'snake', 'crocodile'],
-    'bird':      ['feather', 'wing', 'beak', 'fly', 'egg'],
-    'amphibian': ['frog', 'toad', 'salamander', 'water', 'land'],
-}
 
+    # ------------------------------------------------------------------
+    # HABITAT — where the animal lives
+    # ------------------------------------------------------------------
+    'jungle':     ['rainforest', 'tropical', 'forest', 'canopy', 'tree', 'dense'],
+    'forest':     ['woodland', 'jungle', 'rainforest', 'tree', 'canopy', 'boreal'],
+    'rainforest': ['jungle', 'tropical', 'humid', 'canopy', 'dense', 'forest'],
+    'woodland':   ['forest', 'tree', 'shrub', 'temperate'],
+    'ocean':      ['sea', 'marine', 'aquatic', 'deep', 'pelagic', 'offshore'],
+    'sea':        ['ocean', 'marine', 'aquatic', 'coral', 'reef', 'coastal'],
+    'marine':     ['ocean', 'sea', 'aquatic', 'saltwater', 'coastal', 'reef'],
+    'coral':      ['reef', 'tropical', 'marine', 'sea', 'ocean'],
+    'reef':       ['coral', 'marine', 'tropical', 'shallow', 'sea'],
+    'river':      ['freshwater', 'stream', 'creek', 'lake', 'wetland', 'riparian'],
+    'lake':       ['freshwater', 'river', 'pond', 'wetland', 'inland'],
+    'wetland':    ['swamp', 'marsh', 'river', 'freshwater', 'bog', 'mangrove'],
+    'swamp':      ['wetland', 'marsh', 'mangrove', 'muddy', 'freshwater'],
+    'mangrove':   ['coastal', 'wetland', 'swamp', 'tropical', 'estuary'],
+    'desert':     ['arid', 'dry', 'sand', 'dune', 'barren', 'scrub'],
+    'arid':       ['desert', 'dry', 'sand', 'scrub', 'sparse'],
+    'savanna':    ['grassland', 'plain', 'africa', 'dry', 'shrub', 'open'],
+    'grassland':  ['plain', 'savanna', 'prairie', 'meadow', 'steppe', 'open'],
+    'prairie':    ['grassland', 'plain', 'meadow', 'open', 'north america'],
+    'tundra':     ['arctic', 'polar', 'cold', 'barren', 'permafrost', 'alpine'],
+    'arctic':     ['polar', 'cold', 'ice', 'snow', 'tundra', 'frozen'],
+    'polar':      ['arctic', 'antarctic', 'ice', 'cold', 'snow', 'tundra'],
+    'mountain':   ['highland', 'cliff', 'rocky', 'alpine', 'peak', 'slope'],
+    'highland':   ['mountain', 'alpine', 'rocky', 'plateau', 'elevation'],
+    'alpine':     ['mountain', 'highland', 'cold', 'rocky', 'snow'],
+    'cave':       ['underground', 'dark', 'bat', 'subterranean', 'rocky'],
+    'underground':['burrow', 'cave', 'tunnel', 'subterranean', 'soil'],
+    'burrow':     ['underground', 'tunnel', 'soil', 'dig', 'mole'],
+    'coastal':    ['shore', 'beach', 'sea', 'marine', 'tidal', 'cliff'],
+    'island':     ['tropical', 'isolated', 'coastal', 'endemic'],
+    'tree':       ['arboreal', 'forest', 'canopy', 'branch', 'climb'],
+
+    # ------------------------------------------------------------------
+    # GEOGRAPHY — regions and continents
+    # ------------------------------------------------------------------
+    'africa':       ['savanna', 'grassland', 'safari', 'tropical', 'sub-saharan'],
+    'asia':         ['tropical', 'india', 'china', 'southeast', 'himalaya'],
+    'india':        ['asia', 'tropical', 'bengal', 'himalaya', 'monsoon'],
+    'china':        ['asia', 'panda', 'bamboo', 'himalaya'],
+    'australia':    ['marsupial', 'outback', 'eucalyptus', 'oceania', 'reef'],
+    'europe':       ['temperate', 'woodland', 'boreal', 'alpine'],
+    'amazon':       ['rainforest', 'tropical', 'south america', 'jungle', 'river'],
+    'antarctic':    ['polar', 'cold', 'ice', 'penguin', 'snow', 'frozen'],
+    'arctic':       ['polar', 'cold', 'ice', 'snow', 'tundra', 'frozen'],
+    'southeast':    ['tropical', 'asia', 'jungle', 'rainforest', 'humid'],
+    'north america':['prairie', 'forest', 'temperate', 'mountain', 'river'],
+    'south america':['amazon', 'rainforest', 'tropical', 'andes', 'jungle'],
+
+    # ------------------------------------------------------------------
+    # DIET — what the animal eats
+    # ------------------------------------------------------------------
+    'meat':      ['carnivore', 'prey', 'hunt', 'flesh', 'kill', 'predator'],
+    'plant':     ['herbivore', 'leaf', 'grass', 'vegetation', 'foliage', 'browse'],
+    'grass':     ['herbivore', 'graze', 'meadow', 'vegetation', 'plant'],
+    'fruit':     ['omnivore', 'berry', 'seed', 'tropical', 'plant'],
+    'seed':      ['bird', 'rodent', 'granivore', 'grain', 'plant'],
+    'fish':      ['piscivore', 'aquatic', 'marine', 'salmon', 'water', 'fishing'],
+    'insect':    ['invertebrate', 'bug', 'ant', 'beetle', 'larvae', 'arthropod'],
+    'bug':       ['insect', 'invertebrate', 'beetle', 'larvae', 'spider'],
+    'worm':      ['invertebrate', 'soil', 'underground', 'earthworm'],
+    'nectar':    ['flower', 'pollinator', 'bee', 'butterfly', 'hummingbird'],
+    'blood':     ['parasite', 'vampire', 'bat', 'leech', 'mosquito'],
+    'carrion':   ['scavenger', 'dead', 'vulture', 'hyena', 'decay'],
+    'plankton':  ['filter', 'marine', 'whale', 'aquatic', 'microscopic'],
+    'bamboo':    ['panda', 'plant', 'herbivore', 'asia', 'china'],
+    'carnivore': ['predator', 'hunt', 'meat', 'prey', 'kill', 'flesh'],
+    'herbivore': ['plant', 'grass', 'leaf', 'vegetation', 'graze', 'browse'],
+    'omnivore':  ['plant', 'meat', 'fruit', 'insect', 'flexible'],
+    'scavenger': ['carrion', 'dead', 'vulture', 'hyena', 'opportunistic'],
+    'predator':  ['hunt', 'carnivore', 'apex', 'prey', 'kill', 'chase'],
+    'prey':      ['hunted', 'victim', 'small', 'flee', 'escape'],
+    'filter':    ['plankton', 'whale', 'flamingo', 'baleen', 'marine'],
+    'graze':     ['grass', 'herbivore', 'cattle', 'plain', 'meadow'],
+
+    # ------------------------------------------------------------------
+    # BEHAVIOR — how the animal acts
+    # ------------------------------------------------------------------
+    'hunt':      ['predator', 'chase', 'carnivore', 'ambush', 'stalk', 'prey'],
+    'stalk':     ['hunt', 'predator', 'ambush', 'stealth', 'cat', 'sneak'],
+    'ambush':    ['stalk', 'hunt', 'camouflage', 'wait', 'predator'],
+    'nocturnal': ['night', 'dark', 'owl', 'bat', 'crepuscular', 'darkness'],
+    'diurnal':   ['day', 'daytime', 'active', 'sun', 'light'],
+    'migrate':   ['seasonal', 'travel', 'journey', 'flock', 'long distance'],
+    'hibernate': ['winter', 'sleep', 'dormant', 'cold', 'burrow'],
+    'social':    ['pack', 'herd', 'colony', 'flock', 'group', 'pod', 'troop'],
+    'solitary':  ['alone', 'lone', 'independent', 'territorial', 'isolated'],
+    'territorial':['solitary', 'defend', 'mark', 'aggressive', 'dominant'],
+    'pack':      ['wolf', 'social', 'group', 'hunt', 'cooperative'],
+    'herd':      ['social', 'group', 'cattle', 'elephant', 'plain'],
+    'flock':     ['bird', 'social', 'group', 'migrate', 'sky'],
+    'colony':    ['social', 'ant', 'bee', 'bat', 'group', 'cooperative'],
+    'camouflage':['hide', 'blend', 'color', 'pattern', 'ambush', 'stealth'],
+    'venomous':  ['poison', 'toxic', 'bite', 'sting', 'snake', 'dangerous'],
+    'poison':    ['venom', 'toxic', 'frog', 'dangerous', 'lethal'],
+    'venom':     ['poison', 'toxic', 'bite', 'sting', 'fang', 'gland'],
+    'aggressive': ['territorial', 'dominant', 'attack', 'dangerous', 'fierce'],
+    'defensive': ['camouflage', 'shell', 'spine', 'armor', 'flee'],
+    'dig':       ['burrow', 'underground', 'soil', 'mole', 'tunnel'],
+    'swim':      ['aquatic', 'fin', 'water', 'marine', 'dive', 'streamlined'],
+    'dive':      ['swim', 'deep', 'aquatic', 'bird', 'marine', 'plunge'],
+    'fly':       ['wing', 'aerial', 'flight', 'soar', 'glide', 'bird'],
+    'glide':     ['fly', 'aerial', 'wing', 'soar', 'membrane'],
+    'climb':     ['arboreal', 'tree', 'claw', 'grip', 'monkey', 'gecko'],
+    'jump':      ['leap', 'hop', 'spring', 'bounce', 'kangaroo', 'frog'],
+    'run':       ['fast', 'sprint', 'chase', 'speed', 'gallop', 'flee'],
+    'fast':      ['speed', 'quick', 'agile', 'swift', 'sprint', 'cheetah'],
+    'slow':      ['sluggish', 'lethargic', 'turtle', 'sloth', 'crawl'],
+
+    # ------------------------------------------------------------------
+    # PHYSICAL TRAITS — appearance and body features
+    # ------------------------------------------------------------------
+    'big':       ['large', 'giant', 'huge', 'massive', 'heavy', 'bulky'],
+    'large':     ['big', 'giant', 'massive', 'heavy', 'bulky', 'dominant'],
+    'giant':     ['large', 'massive', 'biggest', 'dominant', 'enormous'],
+    'small':     ['tiny', 'miniature', 'dwarf', 'little', 'lightweight'],
+    'tiny':      ['small', 'miniature', 'dwarf', 'micro', 'lightweight'],
+    'long':      ['elongated', 'slender', 'stretch', 'neck', 'snake'],
+    'tall':      ['long', 'giraffe', 'large', 'height', 'neck'],
+    'heavy':     ['large', 'massive', 'fat', 'bulky', 'elephant', 'hippo'],
+    'wing':      ['fly', 'bird', 'aerial', 'feather', 'bat', 'membrane'],
+    'feather':   ['bird', 'wing', 'plume', 'colorful', 'flight'],
+    'fur':       ['mammal', 'warm', 'coat', 'thick', 'fluffy', 'hair'],
+    'scale':     ['reptile', 'fish', 'armor', 'skin', 'cold'],
+    'shell':     ['turtle', 'tortoise', 'snail', 'crab', 'armor', 'hard'],
+    'spine':     ['hedgehog', 'porcupine', 'defensive', 'sharp', 'armor'],
+    'horn':      ['rhino', 'antler', 'deer', 'goat', 'bovine', 'keratin'],
+    'antler':    ['deer', 'elk', 'moose', 'horn', 'seasonal', 'male'],
+    'tusk':      ['elephant', 'ivory', 'walrus', 'boar', 'elongated'],
+    'fang':      ['venom', 'snake', 'predator', 'bite', 'sharp'],
+    'claw':      ['predator', 'sharp', 'grip', 'climb', 'talon', 'cat'],
+    'talon':     ['bird', 'raptor', 'claw', 'sharp', 'eagle', 'owl'],
+    'beak':      ['bird', 'bill', 'feed', 'sharp', 'peck'],
+    'bill':      ['beak', 'bird', 'duck', 'platypus', 'flat'],
+    'trunk':     ['elephant', 'nose', 'long', 'flexible', 'mammal'],
+    'tail':      ['balance', 'monkey', 'cat', 'long', 'appendage'],
+    'mane':      ['lion', 'horse', 'male', 'hair', 'neck', 'pride'],
+    'pouch':     ['marsupial', 'kangaroo', 'koala', 'australia', 'joey'],
+    'fin':       ['fish', 'aquatic', 'swim', 'marine', 'dolphin', 'shark'],
+    'gill':      ['fish', 'aquatic', 'breathe', 'water', 'amphibian'],
+    'stripe':    ['striped', 'zebra', 'tiger', 'pattern', 'linear'],
+    'spot':      ['spotted', 'leopard', 'cheetah', 'dot', 'pattern'],
+    'color':     ['colorful', 'bright', 'camouflage', 'pattern', 'pigment'],
+    'colorful':  ['bright', 'vibrant', 'tropical', 'bird', 'frog', 'reef'],
+    'bright':    ['colorful', 'vibrant', 'warning', 'tropical', 'bird'],
+
+    # ------------------------------------------------------------------
+    # COLOR
+    # ------------------------------------------------------------------
+    'black':   ['dark', 'melanistic', 'panther', 'shadow', 'night'],
+    'white':   ['pale', 'albino', 'snow', 'arctic', 'light', 'polar'],
+    'red':     ['bright', 'warning', 'colorful', 'tropical', 'vibrant'],
+    'orange':  ['bright', 'colorful', 'tropical', 'warning', 'tiger'],
+    'yellow':  ['bright', 'colorful', 'tropical', 'warning', 'bee'],
+    'green':   ['camouflage', 'tropical', 'forest', 'frog', 'lizard'],
+    'blue':    ['colorful', 'marine', 'tropical', 'bird', 'reef'],
+    'brown':   ['camouflage', 'earth', 'woodland', 'bear', 'deer'],
+    'grey':    ['elephant', 'wolf', 'camouflage', 'stone', 'dolphin'],
+    'gray':    ['elephant', 'wolf', 'camouflage', 'stone', 'dolphin'],
+
+    # ------------------------------------------------------------------
+    # CLASSIFICATION — taxonomy
+    # ------------------------------------------------------------------
+    'mammal':     ['warm', 'fur', 'hair', 'milk', 'vertebrate', 'placental'],
+    'reptile':    ['scale', 'cold', 'lizard', 'snake', 'crocodile', 'ectotherm'],
+    'bird':       ['feather', 'wing', 'beak', 'fly', 'egg', 'avian'],
+    'amphibian':  ['frog', 'toad', 'salamander', 'water', 'land', 'moist'],
+    'fish':       ['aquatic', 'gill', 'fin', 'scale', 'freshwater', 'marine'],
+    'insect':     ['invertebrate', 'bug', 'arthropod', 'six', 'exoskeleton'],
+    'invertebrate':['insect', 'spider', 'crab', 'worm', 'no backbone'],
+    'marsupial':  ['pouch', 'australia', 'kangaroo', 'koala', 'joey'],
+    'primate':    ['monkey', 'ape', 'human', 'social', 'intelligent'],
+    'rodent':     ['mouse', 'rat', 'squirrel', 'small', 'gnaw'],
+    'feline':     ['cat', 'lion', 'tiger', 'leopard', 'jaguar', 'carnivore'],
+    'canine':     ['dog', 'wolf', 'fox', 'pack', 'social'],
+    'raptor':     ['bird', 'eagle', 'hawk', 'owl', 'talon', 'predator'],
+    'shark':      ['marine', 'predator', 'fish', 'ocean', 'apex'],
+    'whale':      ['marine', 'mammal', 'large', 'ocean', 'filter', 'cetacean'],
+    'dolphin':    ['marine', 'mammal', 'social', 'intelligent', 'cetacean'],
+    'snake':      ['reptile', 'scale', 'venom', 'elongated', 'slither'],
+    'lizard':     ['reptile', 'scale', 'cold', 'climb', 'desert'],
+    'frog':       ['amphibian', 'jump', 'water', 'poison', 'moist'],
+    'spider':     ['invertebrate', 'arachnid', 'web', 'eight', 'venom'],
+    'crab':       ['invertebrate', 'marine', 'shell', 'claw', 'coastal'],
+    'butterfly':  ['insect', 'wing', 'colorful', 'flower', 'migrate', 'nectar'],
+    'bee':        ['insect', 'colony', 'nectar', 'flower', 'social', 'sting'],
+
+    # ------------------------------------------------------------------
+    # CONSERVATION STATUS
+    # ------------------------------------------------------------------
+    'endangered': ['threatened', 'rare', 'extinction', 'protected', 'vulnerable'],
+    'rare':       ['endangered', 'uncommon', 'scarce', 'threatened', 'few'],
+    'extinct':    ['gone', 'lost', 'prehistoric', 'fossil', 'disappeared'],
+    'protected':  ['endangered', 'conservation', 'reserve', 'sanctuary'],
+}
 
 # =============================================================================
 #  SECTION 2 — DATA LOADING
@@ -102,16 +255,15 @@ def load_data(path: str) -> pd.DataFrame:
     for col in CLEANED_COLS:
         df[col] = df[col].fillna('')
 
-    # Weight: Name x5, Physical x2, Behavior x2, rest x1
     df['Search_Text'] = (
-        (df['Cleaned Name'].astype(str) + ' ') * 5 +
-        (df['Cleaned Physical'].astype(str) + ' ') * 2 +
-        (df['Cleaned Behavior'].astype(str) + ' ') * 2 +
-        df['Cleaned Description'].astype(str) + ' ' +
-        df['Cleaned Habitat'].astype(str) + ' ' +
-        df['Cleaned Diet'].astype(str) + ' ' +
-        df['Cleaned Classification'].astype(str)
-    )
+    (df['Cleaned Name'].astype(str) + ' ') * 5 +
+    (df['Cleaned Physical'].astype(str) + ' ') * 2 +
+    (df['Cleaned Behavior'].astype(str) + ' ') * 2 +
+    (df['Cleaned Habitat'].astype(str) + ' ') * 2 +
+    (df['Cleaned Diet'].astype(str) + ' ') * 2 +
+    (df['Cleaned Classification'].astype(str) + ' ') * 2 +
+    df['Cleaned Description'].astype(str)
+)
 
     return df
 
@@ -197,8 +349,8 @@ def search(query: str, df: pd.DataFrame, vectorizer, tfidf_matrix,
 # =============================================================================
 #  SECTION 6 — EVALUATION METRICS
 #  Measures retrieval quality at rank k using standard IR metrics:
-#    - Precision@K  : fraction of retrieved docs that are relevant
-#    - Recall@K     : fraction of all relevant docs that were retrieved
+#    - Precision-K  : fraction of retrieved docs that are relevant
+#    - Recall-K     : fraction of all relevant docs that were retrieved
 #    - Average Precision (AP) : area under the precision-recall curve
 #    - MAP          : mean AP across all queries in the session
 #
@@ -251,15 +403,12 @@ def print_inverted_index(clean_q: str, inverted_index: dict) -> None:
     print(f"\n{DIVIDER}")
     print(f"  Inverted Index  |  query: '{clean_q}'")
     print(DIVIDER)
-    print(f"  {'Term':<15} {'DF':<6} Postings (first 10)")
+    print(f"  {'Term':<15} {'DF':<6}")
     print(DIVIDER)
     for term in clean_q.split():
         if term in inverted_index:
-            entry        = inverted_index[term]
-            postings_str = ", ".join(entry['Postings'][:10])
-            if entry['DF'] > 10:
-                postings_str += " ..."
-            print(f"  {term:<15} {entry['DF']:<6} {postings_str}")
+            entry = inverted_index[term]
+            print(f"  {term:<15} {entry['DF']:<6}")
         else:
             print(f"  {term:<15} {'0':<6} (not found)")
     print(DIVIDER)
@@ -269,8 +418,8 @@ def print_results(results: list[dict], original_query: str) -> None:
     """Display ranked search results with name, similarity score, and URL."""
     print(f"\n  {len(results)} results for '{original_query}'\n")
     for i, r in enumerate(results, start=1):
-        print(f"  [{i:>2}] {r['Name']}  (similarity: {r['Score']:.4f})")
-        print(f"        {r['URL']}")
+        print(f"[{i:>2}] {r['Name']}  (similarity: {r['Score']:.4f})")
+        print(f"     {r['URL']}")
 
 
 def print_evaluation(results: list[dict], relevant_docs: list[int],
@@ -287,7 +436,7 @@ def print_evaluation(results: list[dict], relevant_docs: list[int],
 
     # --- per-rank detail ---
     print(f"\n{DIVIDER}")
-    print(f"  Rank-by-rank breakdown")
+    print(f"  Ranking Detail")
     print(DIVIDER)
 
     hits, sum_p = 0, 0.0
@@ -298,7 +447,7 @@ def print_evaluation(results: list[dict], relevant_docs: list[int],
             hits     += 1
             p_at_rank = hits / rank
             sum_p    += p_at_rank
-            matches.append(f"  Rank {rank:>2}: Match    P@{rank} = {hits}/{rank} = {p_at_rank:.2f}")
+            matches.append(f"  Rank {rank:>2}: Match    P{rank} = {hits}/{rank} = {p_at_rank:.2f}")
         else:
             misses.append(f"  Rank {rank:>2}: No match")
 
@@ -318,9 +467,17 @@ def print_evaluation(results: list[dict], relevant_docs: list[int],
     # --- TP / FP / FN ---
     print(f"\n  TP : {TP}   FP : {FP}   FN : {FN}")
 
+    # --- Precision & Recall calculation process ---
+    print(f"\n{DIVIDER}")
+    print(f"  Precision & Recall Calculation")
+    print(DIVIDER)
+    print(f"  Precision = TP/(TP+FP) = {TP}/({TP}+{FP}) = {TP}/{TP+FP} = {p_score:.2f}")
+    print(f"  Recall    = TP/(TP+FN) = {TP}/({TP}+{FN}) = {TP}/{TP+FN} = {r_score:.2f}")
+    print(DIVIDER)
+
     # --- summary bar ---
     print(f"\n{DIVIDER_BOLD}")
-    print(f"  Precision@{k}: {p_score:.2f}   Recall@{k}: {r_score:.2f}   AP: {ap_score:.2f}")
+    print(f"  Precision: {p_score:.2f}   Recall: {r_score:.2f}   AP: {ap_score:.2f}")
     print(DIVIDER_BOLD)
 
     return p_score, r_score, ap_score
@@ -329,7 +486,7 @@ def print_evaluation(results: list[dict], relevant_docs: list[int],
 def print_session_history(history: list[dict]) -> None:
     """Show all queries this session and the running MAP score."""
     print(f"\n{DIVIDER}")
-    print(f"  Session History")
+    print(f"  History")
     print(DIVIDER)
     print(f"  {'Query':<22} {'Precision':>10} {'Recall':>8} {'AP':>6}")
     print(DIVIDER)
@@ -356,32 +513,27 @@ def main() -> None:
     session_history: list[dict] = []
 
     while True:
-        print(f"\n{'  Animal Finder':^60}")
-        print(f"{'  type q or exit to quit':^60}")
+        print(f"\n{'Animal Finder':^60}")
         print(DIVIDER)
 
         user_query = input("\n  Search: ").strip()
 
-        if user_query.lower() in {'q', 'exit', 'quit'}:
-            print("\n  Goodbye.\n")
-            break
-
         if not user_query:
-            print("  Please enter a search term.")
+            print("Please enter a search term.")
             continue
 
         # --- query processing ---
         clean_q = clean_query(user_query)
         if not clean_q:
-            print("  Please enter a valid animal trait or habitat.")
+            print("Please enter a valid animal trait or habitat.")
             continue
 
         if clean_q != user_query.lower():
-            print(f"\n  Cleaned  : '{clean_q}'")
+            print(f"\nCleaned  : '{clean_q}'")
 
         expanded_q = expand_query(clean_q)
         if expanded_q != clean_q:
-            print(f"  Expanded : '{expanded_q}'")
+            print(f"Expanded : '{expanded_q}'")
 
         # --- inverted index display ---
         print_inverted_index(clean_q, inverted_index)
@@ -390,7 +542,7 @@ def main() -> None:
         results, all_scores = search(clean_q, df, vectorizer, tfidf_matrix, top_n=TOP_N)
 
         if not results:
-            print(f"\n  No results found for '{user_query}'")
+            print(f"\nNo results found for '{user_query}'")
             print(DIVIDER)
             continue
 

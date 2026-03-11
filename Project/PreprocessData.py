@@ -34,7 +34,7 @@ base_stopwords = set(stopwords.words('english'))
 # ========= Custom Stopwords for Animal Data ==========
 custom_stopwords = {
 
-    # --- Web / UI artifacts (scraped noise) ---
+    # --- Web / UI artifacts ---
     'click', 'explore', 'map', 'show', 'read', 'learn', 'discover',
     'visit', 'page', 'article', 'website', 'link', 'photo', 'image',
     'copyright', 'reserved', 'right', 'source', 'reference', 'fact',
@@ -45,22 +45,18 @@ custom_stopwords = {
     'therefore', 'thus', 'hence', 'furthermore', 'moreover',
     'additionally', 'nevertheless', 'nonetheless',
 
-    # --- Generic verbs (low discriminative value) ---
+    # --- Generic verbs ---
     'make', 'made', 'use', 'used', 'using', 'able',
     'include', 'including', 'become', 'consider', 'get', 'give',
     'take', 'keep', 'let', 'put', 'seem', 'tell', 'try', 'mean',
     'call', 'called', 'known', 'refer',
-
-    # --- Overly generic nouns (appear in nearly every document) ---
     'animal', 'creature', 'organism', 'thing', 'example',
     'type', 'form', 'way', 'part', 'number', 'member',
     'world', 'nature', 'environment',
-
-    # --- Vague quantifiers (not useful for retrieval) ---
     'many', 'most', 'some', 'several', 'various', 'certain',
     'few', 'less', 'more', 'much', 'lot', 'enough',
 
-    # --- Time references (rarely discriminative for animals) ---
+    # --- Time references ---
     'year', 'month', 'day', 'hour', 'time', 'period',
     'season', 'century', 'age',
 

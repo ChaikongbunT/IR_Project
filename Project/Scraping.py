@@ -28,9 +28,7 @@ session = requests.Session()
 session.headers.update(headers)
 
 EXCLUDE_KEYWORDS = [
-    'animals-that-start', 'scientific', 'class', 'location',
-    'endangered', 'amphibians', 'birds', 'fish', 'mammals',
-    'reptiles', 'invertebrates', 'insects', 'page', 'quiz', 'blog'
+    'animals-that-start', 'scientific', 'class', 'location','page', 'quiz', 'blog'
 ]
 
 # ========== Gather Animal Links ==========
